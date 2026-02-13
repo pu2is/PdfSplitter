@@ -1,0 +1,38 @@
+@model PdfUploadInputModel
+@{
+    ViewData["Title"] = "Upload PDF";
+}
+
+<h1>Upload PDF</h1>
+<p class="text-muted">
+    This page is a placeholder for the first step of the workflow.
+</p>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success" role="alert">
+        @statusMessage
+    </div>
+}
+
+<form asp-action="Upload" method="post" enctype="multipart/form-data" class="card p-3">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="File" class="form-label">PDF File</label>
+        <input asp-for="File" class="form-control" accept="application/pdf" />
+        <span asp-validation-for="File" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="TotalPages" class="form-label">Total Pages (manual input)</label>
+        <input asp-for="TotalPages" class="form-control" />
+        <span asp-validation-for="TotalPages" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Continue to Split</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
