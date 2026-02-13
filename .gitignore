@@ -1,40 +1,25 @@
-# Build output
-bin/
-obj/
-out/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
 
-# Test output
-TestResults/
-*.trx
-*.coverage
-*.coveragexml
+# Node / frontend
+node_modules/
+dist/
+.vite/
 
-# Publish output
-publish/
-
-# Visual Studio
-.vs/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-
-# Rider / ReSharper
-.idea/
-_ReSharper*/
-*.DotSettings.user
-
-# VS Code
-.vscode/
-
-# NuGet
-*.nupkg
-*.snupkg
-packages/
+# Runtime storage
+backend/storage/uploads/*.pdf
 
 # Logs
 *.log
 
-# OS files
+# IDE
+.vscode/
+.idea/
+
+# OS
 .DS_Store
 Thumbs.db

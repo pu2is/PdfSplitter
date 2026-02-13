@@ -1,46 +1,60 @@
 # PdfSplitter
 
-Architecture skeleton for a C# web application with a maintainable workflow:
+This project is now a lightweight web app based on:
+
+- Backend: FastAPI (Python)
+- Frontend: Vue 3 + Vite + Tailwind CSS
+
+Current scope only keeps:
 
 1. Upload PDF
-2. Manually define split ranges
-3. Export PDF
-
-This repository intentionally includes only structure and placeholders. No real PDF parsing or splitting is implemented yet.
-
-## Architecture Style
-
-- `Clean Architecture` with a `modular monolith` setup
-- Strong dependency direction:
-  - `Domain` <- `Application` <- `Infrastructure` <- `Web`
-- Feature-oriented folders inside `Application`
+2. Auto redirect to rendering page
+3. Back label to return to upload page
 
 ## Project Structure
 
 ```text
-src/
-  PdfSplitter.Domain/
-  PdfSplitter.Application/
-  PdfSplitter.Infrastructure/
-  PdfSplitter.Web/
-tests/
-  PdfSplitter.Domain.Tests/
-  PdfSplitter.Application.Tests/
-docs/
-  Architecture.md
-PdfSplitter.slnx
+backend/
+  app/
+    api/
+    core/
+    services/
+    main.py
+  requirements.txt
+  storage/uploads/
+frontend/
+  src/
 ```
 
-## Run
+## Prerequisites
+
+- Python 3.11+
+- Node.js 20+
+- npm 10+
+
+## Run Backend
 
 ```powershell
-dotnet restore
-dotnet build
-dotnet run --project src/PdfSplitter.Web/PdfSplitter.Web.csproj
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## Next Implementation Targets
+## Run Frontend
 
-- Replace in-memory storage with durable file/object storage
-- Replace stub split engine with a real PDF library integration
-- Add application-level validation and integration tests
+```powershell
+cd frontend
+copy .env.example .env
+npm install
+npm run dev
+```
+
+Frontend: `http://localhost:5173`  
+Backend: `http://localhost:8000`
+
+## API
+
+- `POST /api/upload` with form-data key `file`
+- `GET /api/files/{file_id}` to stream uploaded PDF
