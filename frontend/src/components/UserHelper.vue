@@ -1,16 +1,40 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { CircleQuestionMark } from "lucide-vue-next";
 
 const isVisible = ref(false);
+const helperRef = ref<HTMLElement | null>(null);
 
 function toggleVisible(): void {
   isVisible.value = !isVisible.value;
 }
+
+function closeOnOutsideClick(event: MouseEvent): void {
+  if (!isVisible.value) {
+    return;
+  }
+
+  const target = event.target;
+  if (!(target instanceof Node)) {
+    return;
+  }
+
+  if (!helperRef.value?.contains(target)) {
+    isVisible.value = false;
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("click", closeOnOutsideClick);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("click", closeOnOutsideClick);
+});
 </script>
 
 <template>
-  <div class="absolute right-5 top-5 z-30">
+  <div ref="helperRef" class="absolute right-5 top-5 z-30">
     <button type="button"
       class="rounded-full p-1 text-gray-400 transition-colors duration-150 hover:text-gray-600"
       aria-label="Show helper"
