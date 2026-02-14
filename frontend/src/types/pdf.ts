@@ -8,6 +8,7 @@ export interface ChosenPdfForm {
   filePath: string;
   fileName?: string;
   fileSizeBytes?: number;
+  file?: File;
 }
 
 export interface LocalPdfIndexResponse {

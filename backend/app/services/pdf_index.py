@@ -121,10 +121,18 @@ class PdfIndexService:
 
     @staticmethod
     def _normalize_pdf_path(file_path: str) -> Path:
-        if not file_path.strip():
+        normalized_file_path = file_path.strip()
+        if not normalized_file_path:
             raise ValueError("File path is required.")
 
-        resolved_path = Path(file_path).expanduser().resolve(strict=True)
+        if "fakepath" in normalized_file_path.lower():
+            raise ValueError("Invalid file path from browser input. Upload the PDF file instead.")
+
+        try:
+            resolved_path = Path(normalized_file_path).expanduser().resolve(strict=True)
+        except FileNotFoundError as exc:
+            raise ValueError("File path does not exist.") from exc
+
         if resolved_path.suffix.lower() != ".pdf":
             raise ValueError("Only PDF files are supported.")
 

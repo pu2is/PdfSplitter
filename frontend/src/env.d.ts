@@ -11,6 +11,7 @@ interface ImportMeta {
 interface ChoosePdfFileResult {
   filePath: string;
   fileName: string;
+  fileSizeBytes: number;
 }
 
 interface Window {

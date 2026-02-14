@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 // icons
 import { FilePlus, FileText, Check, TriangleAlert } from "lucide-vue-next";
 import UserHelper from "@/components/UserHelper.vue";
@@ -11,8 +10,10 @@ import type { ChosenPdfForm } from "@/types/pdf";
 // helper
 import { bytesToSizeString } from "@/utils";
 
-const router = useRouter();
 const pdfStore = usePdfStore();
+const isLoading = computed(() => pdfStore.loading);
+
+const currentPdf = computed(() => pdfStore.currentPdf);
 
 const errorMessage = ref("");
 const fileInputRef = ref<HTMLInputElement | null>(null);
@@ -34,10 +35,41 @@ const chosenPdfSizeLabel = computed((): string => {
   return bytesToSizeString(chosenPdf.value.fileSizeBytes);
 });
 
-
+// ----------- //
+// Choose File //
+// ----------- //
 async function browserFile(): Promise<void> {
   errorMessage.value = "";
+  if (window.desktopBridge?.choosePdfFile) {
+    const selectedPdf = await window.desktopBridge.choosePdfFile();
+    if (!selectedPdf) {
+      return;
+    }
+
+    chosenPdf.value = {
+      filePath: selectedPdf.filePath,
+      fileName: selectedPdf.fileName,
+      fileSizeBytes: selectedPdf.fileSizeBytes
+    };
+    return;
+  }
+
   fileInputRef.value?.click();
+}
+
+function resolveFilePath(file: File, inputPath?: string): string {
+  const nativePath = (file as File & { path?: string }).path?.trim() ?? "";
+  if (nativePath !== "") {
+    return nativePath;
+  }
+
+  const selectedPath = inputPath?.trim() ?? "";
+  const loweredPath = selectedPath.toLowerCase();
+  if (selectedPath !== "" && !loweredPath.includes("\\fakepath\\") && !loweredPath.includes("/fakepath/")) {
+    return selectedPath;
+  }
+
+  return file.name;
 }
 
 function choosePdfFile(files: FileList | null | undefined, filePath?: string): boolean {
@@ -60,9 +92,10 @@ function choosePdfFile(files: FileList | null | undefined, filePath?: string): b
 
   errorMessage.value = "";
   chosenPdf.value = {
-    filePath: filePath?.trim() || file.name,
+    filePath: resolveFilePath(file, filePath),
     fileName: file.name,
-    fileSizeBytes: file.size
+    fileSizeBytes: file.size,
+    file
   };
   return true;
 }
@@ -75,6 +108,9 @@ function onFileSelect(event: Event): void {
   }
 }
 
+// ------------- //
+// Drag and Drop //
+// ------------- //
 function onWindowDragOver(event: DragEvent): void {
   const hasFiles = Array.from(event.dataTransfer?.types ?? []).includes("Files");
   if (!hasFiles) {
@@ -106,11 +142,6 @@ function onWindowDrop(event: DragEvent): void {
   choosePdfFile(event.dataTransfer?.files);
 }
 
-// send request to backend via pinia store
-function confirmChoose() {
-
-}
-
 onMounted(() => {
   window.addEventListener("dragover", onWindowDragOver);
   window.addEventListener("dragleave", onWindowDragLeave);
@@ -122,12 +153,36 @@ onBeforeUnmount(() => {
   window.removeEventListener("dragleave", onWindowDragLeave);
   window.removeEventListener("drop", onWindowDrop);
 });
+
+// ---------------------- //
+// Confirm File Selection //
+// ---------------------- //
+async function confirmChoose(): Promise<void> {
+  if (!hasChosenPdf.value) {
+    errorMessage.value = "Please choose a PDF file first.";
+    return;
+  }
+
+  errorMessage.value = "";
+  const selectedPdf = await pdfStore.selectPdf(chosenPdf.value);
+  if (!selectedPdf) {
+    errorMessage.value = pdfStore.errorMessage || "Failed to index PDF file.";
+    return;
+  }
+
+  chosenPdf.value = {
+    filePath: selectedPdf.path,
+    fileName: selectedPdf.filename
+  };
+}
 </script>
 
 <template>
   <div class="relative flex h-full w-full flex-col items-center justify-center gap-6 rounded-3xl border-2 border-dashed transition-colors duration-150"
     :class="isWindowDraggingFile ? 'border-green-400 bg-green-50/70' : 'border-gray-200 bg-gray-50'">
-    
+
+    <!-- <span>abc || {{ currentPdf }} || {{  }}</span> -->
+
     <input ref="fileInputRef"
       type="file"
       accept=".pdf,application/pdf"
@@ -190,7 +245,5 @@ onBeforeUnmount(() => {
         {{ errorMessage }}
       </p>
     </div>
-
-
   </div>
 </template>
