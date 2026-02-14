@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 // icons
-import { FilePlus, FileText, Check, TriangleAlert, CircleQuestionMark } from "lucide-vue-next";
+import { FilePlus, FileText, Check, TriangleAlert } from "lucide-vue-next";
+import UserHelper from "@/components/UserHelper.vue";
 // store
 import { usePdfStore } from "@/stores/pdfStore";
 // type
@@ -16,7 +17,6 @@ const pdfStore = usePdfStore();
 const errorMessage = ref("");
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isWindowDraggingFile = ref(false);
-const isHelperVisible = ref(false);
 const hasError = computed((): boolean => errorMessage.value.trim() !== "");
 
 const chosenPdf = ref<ChosenPdfForm>({
@@ -134,22 +134,14 @@ onBeforeUnmount(() => {
       class="hidden"
       @change="onFileSelect" />
 
-    <div class="absolute right-5 top-5 z-30">
-      <button type="button"
-        class="rounded-full p-1 text-gray-400 transition-colors duration-150 hover:text-gray-600"
-        aria-label="Show file selection help"
-        @click="isHelperVisible = !isHelperVisible">
-        <CircleQuestionMark class="size-5" />
-      </button>
-      <div v-if="isHelperVisible" class="absolute right-0 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-3 shadow-lg">
-        <p class="text-sm font-semibold text-gray-700">How to use</p>
-        <ul class="mt-2 list-disc space-y-1 pl-5 text-xs text-gray-500">
-          <li>Click <span class="mx-1 py-1 px-2 rounded-full bg-gray-100 text-gray-500">Select Pdf</span> to choose one file.</li>
-          <li>You can also drag and drop a PDF here.</li>
-          <li>Only PDF files are supported.</li>
-        </ul>
-      </div>
-    </div>
+    <UserHelper>
+      <p class="text-sm font-semibold text-gray-700">How to use</p>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-xs text-gray-500">
+        <li>Click <span class="mx-1 rounded-full bg-gray-100 px-2 py-1 text-gray-500">Select Pdf</span> to choose one file.</li>
+        <li>You can also drag and drop a PDF here.</li>
+        <li>Only PDF files are supported.</li>
+      </ul>
+    </UserHelper>
     
     <!-- Chosen pdf tag -->
     <div v-if="hasChosenPdf"
