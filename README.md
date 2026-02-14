@@ -1,9 +1,10 @@
 # PdfSplitter
 
-A lightweight web application for PDF upload and preview flow.
+A lightweight web application for PDF upload and preview flow, with an Electron desktop shell.
 
 - Backend: FastAPI (Python)
 - Frontend: Vue 3 + Vite + Tailwind CSS
+- Desktop: Electron
 
 Current scope:
 
@@ -32,29 +33,38 @@ frontend/
 - Node.js 20+
 - npm 10+
 
-## Run Backend
+## Run Backend (Ubuntu)
 
-```powershell
-cd d:\projects\PdfSplitter\backend
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt
-.\.venv\Scripts\python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```bash
+cd /home/chao/projects/PdfSplitter/backend
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8081
 ```
 
-## Run Frontend
+## Run Frontend (Ubuntu)
 
-```powershell
-cd d:\projects\PdfSplitter\frontend
-copy .env.example .env
+```bash
+cd /home/chao/projects/PdfSplitter/frontend
+cp .env.example .env
 npm install
 npm run dev
+```
+
+## Run Electron (Ubuntu)
+
+```bash
+cd /home/chao/projects/PdfSplitter
+npm install
+npm run electron:dev
 ```
 
 ## URLs
 
 - Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8000`
-- Health check: `http://localhost:8000/api/health`
+- Backend: `http://localhost:8081`
+- Health check: `http://localhost:8081/api/health`
 
 ## API
 
