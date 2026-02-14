@@ -1,7 +1,5 @@
 <template>
-  <div class="min-h-screen py-8">
-    <main class="mx-auto w-full max-w-5xl px-4">
+  <div class="h-screen w-screen flex items-center justify-center p-8">
       <router-view />
-    </main>
   </div>
 </template>

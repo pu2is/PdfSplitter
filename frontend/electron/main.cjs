@@ -63,7 +63,9 @@ async function createMainWindow() {
     }
   });
 
-  const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
+  process.env.VITE_DEV_SERVER_URL =
+    process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
+  const devUrl = process.env.VITE_DEV_SERVER_URL;
   const isDev =
     process.env.ELECTRON_DEV === "true" ||
     process.env.NODE_ENV === "development";

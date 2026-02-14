@@ -1,26 +1,20 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
-import { FileSearch, FileText, Fingerprint } from "lucide-vue-next";
-import PageCard from "../components/PageCard.vue";
-import type { ApiErrorResponse, LocalPdfIndexResponse } from "../types/pdf";
+import { FilePlus } from "lucide-vue-next";
+import { usePdfStore } from "../stores/pdfStore";
 
 const router = useRouter();
-const indexing = ref(false);
-const errorMessage = ref("");
-const selectedPath = ref("");
-const selectedSha256 = ref("");
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const pdfStore = usePdfStore();
+const { errorMessage } = storeToRefs(pdfStore);
 
 async function chooseFileAndIndex(): Promise<void> {
   if (!window.desktopBridge?.choosePdfFile) {
-    errorMessage.value = "Electron bridge is unavailable. Start this page in Electron.";
+    pdfStore.setErrorMessage("Electron bridge is unavailable. Start this page in Electron.");
     return;
   }
 
-  errorMessage.value = "";
-  indexing.value = true;
+  pdfStore.setErrorMessage("");
 
   try {
     const chosen = await window.desktopBridge.choosePdfFile();
@@ -28,65 +22,27 @@ async function chooseFileAndIndex(): Promise<void> {
       return;
     }
 
-    const response = await fetch(`${apiBaseUrl}/api/files/index-local`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ file_path: chosen.filePath })
-    });
-
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as ApiErrorResponse | null;
-      throw new Error(payload?.detail ?? "Failed to index local PDF.");
-    }
-
-    const payload = (await response.json()) as LocalPdfIndexResponse;
-    selectedPath.value = payload.path;
-    selectedSha256.value = payload.sha256;
+    const payload = await pdfStore.indexLocalPdf(chosen.filePath);
 
     await router.push({ name: "rendering", params: { fileId: String(payload.file_id) } });
-  } catch (error: unknown) {
-    errorMessage.value =
-      error instanceof Error ? error.message : "Failed to index local PDF.";
-  } finally {
-    indexing.value = false;
+  } catch {
+    // Errors are handled in pdfStore.errorMessage.
   }
 }
 </script>
 
 <template>
-  <PageCard
-    title="Choose Local PDF"
-    subtitle="Choose file in Electron, then backend computes SHA256 and stores path/filename/hash in SQLite."
-  >
-    <template #titleIcon>
-      <FileText class="h-6 w-6" />
-    </template>
+  <div class="flex h-full w-full flex-col items-center justify-center gap-6 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50">
+    <FilePlus class="h-1/6 w-auto text-gray-200"
+      :stroke-width="1" />
 
-    <div class="space-y-4">
-      <button
-        class="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-        type="button"
-        :disabled="indexing"
-        @click="chooseFileAndIndex"
-      >
-        <FileSearch class="h-4 w-4" />
-        {{ indexing ? "Processing..." : "Choose File" }}
-      </button>
-
-      <div v-if="selectedPath" class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-        <p class="break-all text-slate-700"><strong>Path:</strong> {{ selectedPath }}</p>
-        <p class="mt-2 break-all text-slate-700">
-          <span class="inline-flex items-center gap-1">
-            <Fingerprint class="h-4 w-4" />
-            <strong>SHA256:</strong>
-          </span>
-          {{ selectedSha256 }}
-        </p>
-      </div>
+    <div class="text-xl py-2 px-8 rounded-full bg-gray-100 text-gray-500 font-bold cursor-pointer hover:bg-gray-100/50 hover:shadow-sm"
+      @click="chooseFileAndIndex">
+      Select PDF
     </div>
 
-    <p v-if="errorMessage" class="mt-4 text-sm text-red-600">{{ errorMessage }}</p>
-  </PageCard>
+    <p v-if="errorMessage" class="max-w-[80%] text-center text-sm font-medium text-red-500">
+      {{ errorMessage }}
+    </p>
+  </div>
 </template>
