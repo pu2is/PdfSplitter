@@ -1,8 +1,8 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 import UploadView from "../views/UploadView.vue";
 import RenderingView from "../views/RenderingView.vue";
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: "/",
     name: "upload",

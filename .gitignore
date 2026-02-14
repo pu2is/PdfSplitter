@@ -12,6 +12,7 @@ dist/
 
 # Runtime storage
 backend/storage/uploads/*.pdf
+backend/storage/*.db
 
 # Local developer docs (never commit)
 docs-local/

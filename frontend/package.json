@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit",
+    "electron": "electron .",
+    "electron:dev": "set ELECTRON_DEV=true&& electron ."
   },
   "dependencies": {
     "lucide-vue-next": "^0.525.0",
@@ -14,10 +18,14 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@types/node": "^22.13.5",
     "@vitejs/plugin-vue": "^5.2.4",
     "autoprefixer": "^10.4.21",
+    "electron": "^33.2.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "vite": "^5.4.19"
+    "typescript": "^5.8.3",
+    "vite": "^5.4.19",
+    "vue-tsc": "^2.2.10"
   }
 }

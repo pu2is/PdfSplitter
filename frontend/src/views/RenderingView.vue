@@ -1,22 +1,19 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { ArrowLeft, ScanLine } from "lucide-vue-next";
 
-const props = defineProps({
-  fileId: {
-    type: String,
-    required: true
-  }
-});
+const props = defineProps<{
+  fileId: string;
+}>();
 
 const router = useRouter();
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
-const pdfUrl = computed(() => `${apiBaseUrl}/api/files/${props.fileId}`);
+const pdfUrl = computed(() => `${apiBaseUrl}/api/files/local/${props.fileId}`);
 
-function backToUpload() {
-  router.push({ name: "upload" });
+function backToUpload(): void {
+  void router.push({ name: "upload" });
 }
 </script>
 
