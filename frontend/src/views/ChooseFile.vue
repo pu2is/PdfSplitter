@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 // icons
 import { FilePlus, FileText, Check, CircleAlert, TriangleAlert } from "lucide-vue-next";
@@ -15,6 +15,7 @@ const pdfStore = usePdfStore();
 
 const errorMessage = ref("");
 const fileInputRef = ref<HTMLInputElement | null>(null);
+const isWindowDraggingFile = ref(false);
 const hasError = computed((): boolean => errorMessage.value.trim() !== "");
 
 const chosenPdf = ref<ChosenPdfForm>({
@@ -38,20 +39,14 @@ async function browserFile(): Promise<void> {
   fileInputRef.value?.click();
 }
 
-function onFileSelect(event: Event): void {
-  const input = event.target as HTMLInputElement | null;
-  const files = input?.files;
-
+function choosePdfFile(files: FileList | null | undefined, filePath?: string): boolean {
   if (!files || files.length === 0) {
-    return;
+    return false;
   }
 
   if (files.length > 1) {
     errorMessage.value = "Please choose only one PDF file.";
-    if (input) {
-      input.value = "";
-    }
-    return;
+    return false;
   }
 
   const file = files[0];
@@ -59,38 +54,78 @@ function onFileSelect(event: Event): void {
 
   if (!isPdfFile) {
     errorMessage.value = "Only PDF files are supported.";
-    if (input) {
-      input.value = "";
-    }
+    return false;
+  }
+
+  errorMessage.value = "";
+  chosenPdf.value = {
+    filePath: filePath?.trim() || file.name,
+    fileName: file.name,
+    fileSizeBytes: file.size
+  };
+  return true;
+}
+
+function onFileSelect(event: Event): void {
+  const input = event.target as HTMLInputElement | null;
+  const isChosen = choosePdfFile(input?.files, input?.value);
+  if (!isChosen && input) {
+    input.value = "";
+  }
+}
+
+function onWindowDragOver(event: DragEvent): void {
+  const hasFiles = Array.from(event.dataTransfer?.types ?? []).includes("Files");
+  if (!hasFiles) {
     return;
   }
 
-  const filePath = input?.value?.trim() || file.name;
-  const fileName = file.name;
-  const fileSizeBytes = file.size;
+  event.preventDefault();
+  isWindowDraggingFile.value = true;
 
-  errorMessage.value = "";
-  console.log({
-    filePath,
-    fileName,
-    fileSizeBytes
-  });
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "copy";
+  }
+}
 
-  chosenPdf.value = {
-    filePath,
-    fileName,
-    fileSizeBytes
-  };
+function onWindowDragLeave(event: DragEvent): void {
+  if (event.clientX === 0 && event.clientY === 0) {
+    isWindowDraggingFile.value = false;
+  }
+}
+
+function onWindowDrop(event: DragEvent): void {
+  const hasFiles = Array.from(event.dataTransfer?.types ?? []).includes("Files");
+  if (!hasFiles) {
+    return;
+  }
+
+  event.preventDefault();
+  isWindowDraggingFile.value = false;
+  choosePdfFile(event.dataTransfer?.files);
 }
 
 // send request to backend via pinia store
 function confirmChoose() {
 
 }
+
+onMounted(() => {
+  window.addEventListener("dragover", onWindowDragOver);
+  window.addEventListener("dragleave", onWindowDragLeave);
+  window.addEventListener("drop", onWindowDrop);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("dragover", onWindowDragOver);
+  window.removeEventListener("dragleave", onWindowDragLeave);
+  window.removeEventListener("drop", onWindowDrop);
+});
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col items-center justify-center gap-6 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50">
+  <div class="flex h-full w-full flex-col items-center justify-center gap-6 rounded-3xl border-2 border-dashed transition-colors duration-150"
+    :class="isWindowDraggingFile ? 'border-green-400 bg-green-50/70' : 'border-gray-200 bg-gray-50'">
     
     <input ref="fileInputRef"
       type="file"

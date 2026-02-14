@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
-import UploadView from "../views/UploadView.vue";
+import ChooseFile from "../views/ChooseFile.vue";
 
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
     name: "upload",
-    component: UploadView
+    component: ChooseFile
   }
 ];
 
