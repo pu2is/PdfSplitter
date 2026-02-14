@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 // icons
-import { FilePlus, FileText, Check, CircleAlert, TriangleAlert } from "lucide-vue-next";
+import { FilePlus, FileText, Check, TriangleAlert, CircleQuestionMark } from "lucide-vue-next";
 // store
 import { usePdfStore } from "@/stores/pdfStore";
 // type
@@ -16,6 +16,7 @@ const pdfStore = usePdfStore();
 const errorMessage = ref("");
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isWindowDraggingFile = ref(false);
+const isHelperVisible = ref(false);
 const hasError = computed((): boolean => errorMessage.value.trim() !== "");
 
 const chosenPdf = ref<ChosenPdfForm>({
@@ -124,7 +125,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col items-center justify-center gap-6 rounded-3xl border-2 border-dashed transition-colors duration-150"
+  <div class="relative flex h-full w-full flex-col items-center justify-center gap-6 rounded-3xl border-2 border-dashed transition-colors duration-150"
     :class="isWindowDraggingFile ? 'border-green-400 bg-green-50/70' : 'border-gray-200 bg-gray-50'">
     
     <input ref="fileInputRef"
@@ -132,6 +133,23 @@ onBeforeUnmount(() => {
       accept=".pdf,application/pdf"
       class="hidden"
       @change="onFileSelect" />
+
+    <div class="absolute right-5 top-5 z-30">
+      <button type="button"
+        class="rounded-full p-1 text-gray-400 transition-colors duration-150 hover:text-gray-600"
+        aria-label="Show file selection help"
+        @click="isHelperVisible = !isHelperVisible">
+        <CircleQuestionMark class="size-5" />
+      </button>
+      <div v-if="isHelperVisible" class="absolute right-0 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-3 shadow-lg">
+        <p class="text-sm font-semibold text-gray-700">How to use</p>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-xs text-gray-500">
+          <li>Click <span class="mx-1 py-1 px-2 rounded-full bg-gray-100 text-gray-500">Select Pdf</span> to choose one file.</li>
+          <li>You can also drag and drop a PDF here.</li>
+          <li>Only PDF files are supported.</li>
+        </ul>
+      </div>
+    </div>
     
     <!-- Chosen pdf tag -->
     <div v-if="hasChosenPdf"
@@ -146,8 +164,7 @@ onBeforeUnmount(() => {
     </div>
     
     <!-- Icon -->
-    <Transition
-      mode="out-in"
+    <Transition mode="out-in"
       enter-active-class="transition-opacity duration-200 ease-in-out"
       enter-from-class="opacity-0"
       enter-to-class="opacity-100"
@@ -172,14 +189,16 @@ onBeforeUnmount(() => {
         Confirm
       </div>
     </div>
-    <div
-      class="absolute left-1/2 top-1/2 flex h-10 -translate-x-1/2 -translate-y-[-7rem] items-center gap-4 transition-opacity ease-in-out duration-[400ms]"
+    
+    <!-- Error message -->
+    <div class="absolute left-1/2 top-1/2 flex h-10 -translate-x-1/2 -translate-y-[-7rem] items-center gap-4 transition-opacity ease-in-out duration-[400ms]"
       :class="hasError ? 'opacity-100' : 'opacity-0'">
       <TriangleAlert class="size-4 text-red-400" />
       <p class="text-center text-sm font-medium text-red-400">
         {{ errorMessage }}
       </p>
     </div>
-    
+
+
   </div>
 </template>
