@@ -8,14 +8,13 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-interface DesktopChosenFile {
-  canceled: boolean;
-  filePath?: string;
-  fileName?: string;
+interface ChoosePdfFileResult {
+  filePath: string;
+  fileName: string;
 }
 
 interface Window {
   desktopBridge?: {
-    choosePdfFile: () => Promise<DesktopChosenFile>;
+    choosePdfFile: () => Promise<ChoosePdfFileResult | null>;
   };
 }

@@ -1,48 +1,150 @@
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { FilePlus } from "lucide-vue-next";
-import { usePdfStore } from "../stores/pdfStore";
+// icons
+import { FilePlus, FileText, Check, CircleAlert, TriangleAlert } from "lucide-vue-next";
+// store
+import { usePdfStore } from "@/stores/pdfStore";
+// type
+import type { ChosenPdfForm } from "@/types/pdf";
+// helper
+import { bytesToSizeString } from "@/utils";
 
 const router = useRouter();
 const pdfStore = usePdfStore();
-const { errorMessage } = storeToRefs(pdfStore);
 
-async function chooseFileAndIndex(): Promise<void> {
-  if (!window.desktopBridge?.choosePdfFile) {
-    pdfStore.setErrorMessage("Electron bridge is unavailable. Start this page in Electron.");
+const errorMessage = ref("");
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const hasError = computed((): boolean => errorMessage.value.trim() !== "");
+
+const chosenPdf = ref<ChosenPdfForm>({
+  filePath: "",
+  fileName: ""
+});
+
+const hasChosenPdf = computed((): boolean => {
+  const filePath = chosenPdf.value.filePath.trim();
+  const fileName = chosenPdf.value.fileName?.trim() ?? "";
+  return filePath !== "" && fileName !== "";
+});
+
+const chosenPdfSizeLabel = computed((): string => {
+  return bytesToSizeString(chosenPdf.value.fileSizeBytes);
+});
+
+
+async function browserFile(): Promise<void> {
+  errorMessage.value = "";
+  fileInputRef.value?.click();
+}
+
+function onFileSelect(event: Event): void {
+  const input = event.target as HTMLInputElement | null;
+  const files = input?.files;
+
+  if (!files || files.length === 0) {
     return;
   }
 
-  pdfStore.setErrorMessage("");
-
-  try {
-    const chosen = await window.desktopBridge.choosePdfFile();
-    if (chosen.canceled || !chosen.filePath) {
-      return;
+  if (files.length > 1) {
+    errorMessage.value = "Please choose only one PDF file.";
+    if (input) {
+      input.value = "";
     }
-
-    const payload = await pdfStore.indexLocalPdf(chosen.filePath);
-
-    await router.push({ name: "rendering", params: { fileId: String(payload.file_id) } });
-  } catch {
-    // Errors are handled in pdfStore.errorMessage.
+    return;
   }
+
+  const file = files[0];
+  const isPdfFile = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+  if (!isPdfFile) {
+    errorMessage.value = "Only PDF files are supported.";
+    if (input) {
+      input.value = "";
+    }
+    return;
+  }
+
+  const filePath = input?.value?.trim() || file.name;
+  const fileName = file.name;
+  const fileSizeBytes = file.size;
+
+  errorMessage.value = "";
+  console.log({
+    filePath,
+    fileName,
+    fileSizeBytes
+  });
+
+  chosenPdf.value = {
+    filePath,
+    fileName,
+    fileSizeBytes
+  };
+}
+
+// send request to backend via pinia store
+function confirmChoose() {
+
 }
 </script>
 
 <template>
   <div class="flex h-full w-full flex-col items-center justify-center gap-6 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50">
-    <FilePlus class="h-1/6 w-auto text-gray-200"
-      :stroke-width="1" />
-
-    <div class="text-xl py-2 px-8 rounded-full bg-gray-100 text-gray-500 font-bold cursor-pointer hover:bg-gray-100/50 hover:shadow-sm"
-      @click="chooseFileAndIndex">
-      Select PDF
+    
+    <input ref="fileInputRef"
+      type="file"
+      accept=".pdf,application/pdf"
+      class="hidden"
+      @change="onFileSelect" />
+    
+    <!-- Chosen pdf tag -->
+    <div v-if="hasChosenPdf"
+      class="pointer-events-none absolute left-1/2 top-1/2 z-20 flex h-10 -translate-x-1/2 -translate-y-[10rem] items-center gap-3 rounded-full bg-white/90 px-4 shadow-sm backdrop-blur-sm">
+      <div class="flex items-center justify-center w-6 h-6 bg-green-100 rounded-full">
+        <Check class="text-green-500 size-4" />
+      </div>
+      <span class="text-gray-500">
+        {{ chosenPdf.fileName }}
+        <span v-if="chosenPdfSizeLabel">({{ chosenPdfSizeLabel }})</span>
+      </span>
     </div>
-
-    <p v-if="errorMessage" class="max-w-[80%] text-center text-sm font-medium text-red-500">
-      {{ errorMessage }}
-    </p>
+    
+    <!-- Icon -->
+    <Transition
+      mode="out-in"
+      enter-active-class="transition-opacity duration-200 ease-in-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-200 ease-in-out"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0">
+      <component :is="hasChosenPdf ? FileText : FilePlus"
+        :key="hasChosenPdf ? 'file-text' : 'file-plus'"
+        class="size-32 w-auto text-gray-200"
+        :stroke-width="1.8" />
+    </Transition>
+    
+    <!-- Button -->
+    <div class="flex gap-4">
+      <div class="text-xl py-2 px-8 rounded-full bg-gray-100 text-gray-500 font-bold cursor-pointer hover:bg-gray-100/50 hover:shadow-sm transition ease-in-out duration-300"
+        @click="browserFile">
+        {{ hasChosenPdf ? "Change Pdf" : "Select Pdf" }}
+      </div>
+      <div class="text-xl py-2 px-8 rounded-full font-bold cursor-pointer hover:shadow-sm transition ease-in-out duration-300"
+        :class="hasChosenPdf ? 'bg-green-100 text-green-500 hover:bg-green-100/70' : 'bg-gray-100 text-gray-500 hover:bg-gray-100/50'"
+        @click="confirmChoose">
+        Confirm
+      </div>
+    </div>
+    <div
+      class="absolute left-1/2 top-1/2 flex h-10 -translate-x-1/2 -translate-y-[-7rem] items-center gap-4 transition-opacity ease-in-out duration-[400ms]"
+      :class="hasError ? 'opacity-100' : 'opacity-0'">
+      <TriangleAlert class="size-4 text-red-400" />
+      <p class="text-center text-sm font-medium text-red-400">
+        {{ errorMessage }}
+      </p>
+    </div>
+    
   </div>
 </template>

@@ -98,15 +98,16 @@ app.whenReady().then(() => {
       filters: [{ name: "PDF Files", extensions: ["pdf"] }]
     });
 
-    if (result.canceled || result.filePaths.length === 0) {
-      return { canceled: true };
+    if (result.filePaths.length === 0) {
+      return null;
     }
 
     const filePath = result.filePaths[0];
+    const fileSizeBytes = fs.statSync(filePath).size;
     return {
-      canceled: false,
       filePath,
-      fileName: path.basename(filePath)
+      fileName: path.basename(filePath),
+      fileSizeBytes
     };
   });
 

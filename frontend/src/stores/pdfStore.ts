@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { ApiErrorResponse, LocalPdfIndexResponse } from "../types/pdf";
+import type { ApiErrorResponse, ChosenPdfForm, LocalPdfIndexResponse } from "../types/pdf";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081";
 
@@ -21,7 +21,7 @@ export const usePdfStore = defineStore("pdf", {
     setErrorMessage(message: string): void {
       this.errorMessage = message;
     },
-    async indexLocalPdf(filePath: string): Promise<LocalPdfIndexResponse> {
+    async indexLocalPdf(form: ChosenPdfForm): Promise<LocalPdfIndexResponse> {
       this.errorMessage = "";
       this.indexing = true;
 
@@ -31,7 +31,7 @@ export const usePdfStore = defineStore("pdf", {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ file_path: filePath })
+          body: JSON.stringify({ file_path: form.filePath })
         });
 
         if (!response.ok) {

@@ -35,8 +35,6 @@ def index_local_pdf(payload: LocalPdfIndexRequest) -> LocalPdfIndexResponse:
     )
 
 
-
-
 @router.get("/files/local/{file_id}")
 def get_local_indexed_pdf(file_id: int) -> FileResponse:
     file_path = pdf_index.get_file_path_by_id(file_id)

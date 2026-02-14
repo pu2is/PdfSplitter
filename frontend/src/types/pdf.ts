@@ -4,6 +4,12 @@ export interface UploadPdfResponse {
   file_url: string;
 }
 
+export interface ChosenPdfForm {
+  filePath: string;
+  fileName?: string;
+  fileSizeBytes?: number;
+}
+
 export interface LocalPdfIndexResponse {
   file_id: number;
   path: string;
