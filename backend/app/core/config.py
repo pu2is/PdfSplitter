@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -9,7 +10,7 @@ class Settings:
         self.storage_root = self.project_root / "storage"
         self.storage_root.mkdir(parents=True, exist_ok=True)
         self.sqlite_db_path = self.storage_root / "pdf_index.db"
-        self.frontend_origin = "http://localhost:5173"
+        self.frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 
 
 settings = Settings()

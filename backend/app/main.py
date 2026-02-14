@@ -6,9 +6,11 @@ from app.core.config import settings
 
 app = FastAPI(title="PdfSplitter API", version="0.1.0")
 
+allowed_origins = [settings.frontend_origin, "null"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
